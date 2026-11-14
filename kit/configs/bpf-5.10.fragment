@@ -1,0 +1,18 @@
+# Android 16 bpfloader / 5.10-bpf 必需配置
+# 来源：酷安 tiffanyy《内核比rom还重要》25.7.27 / 25.9.14 更新段
+# 4.19 基础项
+CONFIG_BPF=y
+CONFIG_BPF_SYSCALL=y
+CONFIG_BPF_JIT=y
+CONFIG_BPF_JIT_ALWAYS_ON=y
+CONFIG_HAVE_EBPF_JIT=y
+CONFIG_CGROUP_BPF=y
+CONFIG_NETFILTER_XT_MATCH_BPF=y
+CONFIG_NET_CLS_BPF=y
+CONFIG_NET_ACT_BPF=y
+# 5.10 额外项（backport BPF_LSM / BPF_PRELOAD 后才有意义）
+CONFIG_BPF_LSM=y
+CONFIG_BPF_PRELOAD=y
+CONFIG_LSM="lockdown,yama,loadpin,safesetid,integrity,selinux,smack,tomoyo,apparmour,bpf"
+# 可选：内核 BTF（A16 ebpf 模块 / bpftool 调试用；需 pahole v1.21+ 与带 BTF 的 toolchain）
+# CONFIG_DEBUG_INFO_BTF=y

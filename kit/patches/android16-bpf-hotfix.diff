@@ -1,0 +1,12 @@
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 0b0abac8ad13..a49488306729 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -6476,6 +6476,7 @@ void cgroup_sk_clone(struct sock_cgroup_data *skcd)
+ 		 * Don't use cgroup_get_live().
+ 		 */
+ 		cgroup_get(sock_cgroup_ptr(skcd));
++		cgroup_bpf_get(sock_cgroup_ptr(skcd));
+ 	}
+ }
+ 

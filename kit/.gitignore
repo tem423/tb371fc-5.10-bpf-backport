@@ -1,0 +1,26 @@
+# 构建产物：体积大，走 GitHub Release 附件，不进仓库
+dist/Image
+dist/boot-*.img
+dist/System.map
+dist/*.ko
+*.img
+*.ko
+*.o
+*.cmd
+*.su
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# 编译残留
+*.rej
+*.orig
+*.log
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

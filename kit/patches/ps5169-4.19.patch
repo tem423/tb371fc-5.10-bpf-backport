@@ -1,0 +1,47 @@
+--- a/drivers/usb/misc/Kconfig
++++ b/drivers/usb/misc/Kconfig
+@@ -282,6 +282,14 @@
+ 	help
+ 	  Say Y here if you want to support USB super speed re-driver NB7VPQ904M.
+ 
++config USB_REDRIVER_PS5169
++	tristate "USB 3.1 Gen1/Gen2 10Gbps re-driver driver for PS5169"
++	depends on USB_PHY
++	select REGMAP_I2C
++	help
++	  Say Y here if you want to support USB super speed re-driver PS5169.
++	  This is the re-driver used on TB371FC (compatible "hq_redriver,ps5169").
++
+ config USB_REDRIVER_PI2DPX
+ 	tristate "USB 3.1 Gen1/Gen2 10Gbps re-driver driver for PI2DPX"
+         depends on USB_PHY
+--- a/drivers/usb/misc/Makefile
++++ b/drivers/usb/misc/Makefile
+@@ -31,6 +31,7 @@
+ obj-$(CONFIG_USB_SISUSBVGA)		+= sisusbvga/
+ obj-$(CONFIG_USB_LINK_LAYER_TEST)	+= lvstest.o
+ obj-$(CONFIG_USB_REDRIVER_NB7VPQ904M)	+= ssusb-redriver-nb7vpq904m.o
++obj-$(CONFIG_USB_REDRIVER_PS5169)	+= ssusb-redriver-ps5169.o
+ obj-$(CONFIG_USB_REDRIVER_PI2DPX)	+= pi2dpx1217.o
+ obj-$(CONFIG_USB_QTI_KS_BRIDGE)		+= ks_bridge.o
+ obj-$(CONFIG_USB_QCOM_DIAG_BRIDGE)	+= diag_ipc_bridge.o
+--- a/drivers/usb/phy/phy-msm-ssusb-qmp.c
++++ b/drivers/usb/phy/phy-msm-ssusb-qmp.c
+@@ -17,7 +17,7 @@
+ #include <linux/extcon.h>
+ #include <linux/reset.h>
+ 
+-#if IS_BUILTIN(CONFIG_USB_REDRIVER_NB7VPQ904M)
++#if IS_BUILTIN(CONFIG_USB_REDRIVER_PS5169)
+ extern bool get_redriver_exist(void);
+ #endif
+ 
+@@ -489,7 +489,7 @@
+ 		goto fail;
+ 	}
+ 
+-#if IS_BUILTIN(CONFIG_USB_REDRIVER_NB7VPQ904M)
++#if IS_BUILTIN(CONFIG_USB_REDRIVER_PS5169)
+ 	if (get_redriver_exist() &&
+ 	    phy->phy.type == USB_PHY_TYPE_USB3_AND_DP) {
+ 		dev_info(uphy->dev, "Get redriver ic! update usb param\n");
