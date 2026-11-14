@@ -1208,4 +1208,13 @@ do {									\
 #define hid_dbg(hid, fmt, arg...)			\
 	dev_dbg(&(hid)->dev, fmt, ##arg)
 
+#define hid_err_ratelimited(hid, fmt, arg...)			\
+	dev_err_ratelimited(&(hid)->dev, fmt, ##arg)
+#define hid_notice_ratelimited(hid, fmt, arg...)		\
+	dev_notice_ratelimited(&(hid)->dev, fmt, ##arg)
+#define hid_warn_ratelimited(hid, fmt, arg...)			\
+	dev_warn_ratelimited(&(hid)->dev, fmt, ##arg)
+#define hid_info_ratelimited(hid, fmt, arg...)			\
+	dev_info_ratelimited(&(hid)->dev, fmt, ##arg)
+
 #endif

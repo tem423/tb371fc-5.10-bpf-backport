@@ -821,6 +821,17 @@ static atomic_long_t bpf_jit_current;
  * dedicated BPF backend memory area, or if neither of the two
  * below apply.
  */
+/* 4.19 没有 bpf_jit_alloc_exec/free_exec，用模块区分配器兜底 */
+void *__weak bpf_jit_alloc_exec(unsigned long size)
+{
+	return module_alloc(size);
+}
+
+void __weak bpf_jit_free_exec(void *addr)
+{
+	module_memfree(addr);
+}
+
 u64 __weak bpf_jit_alloc_exec_limit(void)
 {
 #if defined(MODULES_VADDR)
