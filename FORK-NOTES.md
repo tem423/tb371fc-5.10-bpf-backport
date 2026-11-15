@@ -1,26 +1,50 @@
-# 本仓库说明：5.10-BPF backport + AstideLabs 通用更新
+# 本仓库说明：TB371FC 4.19.325 + 5.10-BPF backport + AstideLabs 通用更新
 
-这份树是 Lenovo TB371FC（SM8250 / kona / Linux 4.19.325）的完整内核源码，在
-[smith-dog/kernel-tb371fc](https://github.com/smith-dog/kernel-tb371fc) 基础上加了两层改动：
+Lenovo TB371FC（SM6375 / kona / Linux 4.19.325）的完整内核源码，带真实提交历史。
 
-1. **5.10 BPF 反移植** —— 补齐 Android 16 `bpfloader` 所需的 BPF 能力（ringbuf、BTF、
-   `BPF_MAP_TYPE_*` 全集、map-in-map、bpf_iter 等），基线提交里已包含；
-2. **AstideLabs 通用更新 766 项** —— 从
-   [AstideLabs/android_kernel_xiaomi_sm8250](https://github.com/AstideLabs/android_kernel_xiaomi_sm8250)
-   的 `android17-aptusitu-new` 分支筛选，只保留通用内核子系统。
+## 这棵树从哪来
 
-## 提交历史
+不是 tarball 解压后 `git init` 的空历史，链路可以一直追到 Linux 根提交：
+
+```
+Linux 1da177e4 (2.6.12-rc2)
+  └─ ... ─ Linux 4.19.157 (31acccd)
+       ├─ lss4/android_kernel_lenovo_paladin (分支 11，含 CAF LA.UM.9.12.1.r1 合并)
+       │    └─ smith-dog/kernel-tb371fc (升到 4.19.325，自研驱动与 v2.x 配置)
+       │         └─ 本仓库：5.10 BPF backport + AstideLabs 通用更新
+       └─ AstideLabs/android_kernel_xiaomi_sm8250 (同样升到 4.19.325 后转向小米 BSP)
+```
+
+三个关键 merge-base 都是实测出来的：
+
+| 对比 | 共同祖先 |
+|---|---|
+| smith-dog ↔ paladin | `31acccd` **Linux 4.19.157** |
+| smith-dog ↔ AstideLabs | `a67e7cd` **Linux 4.19.325** |
+| paladin ↔ AstideLabs | `3f88a82`（CAF 共享提交） |
+
+所以本树与 AstideLabs 不是「无关历史」，而是 4.19.325 之后各自走了不同的 BSP 分支。
+
+## 提交历史（第一父系）
 
 | 提交 | 内容 |
 |---|---|
-| `9093a27` | baseline：smith-dog tb371fc 4.19.325 + 5.10-bpf backport + v2.2/EROFS 配置（NB7VPQ904M redriver） |
-| `e08dfdb` | 应用 AstideLabs 通用更新，第一批 25 项 |
-| `a9774fb` | 应用 AstideLabs 通用更新，第二批 741 项（651 文件，+6452 / −2782） |
-| `57d6657` | 回滚 `f_midi` 到基线（补丁集把 tasklet 换成 work，但结构体未同步） |
-| `a1345db` | `f2fs_msg` → `f2fs_err`（树内已统一到新日志宏） |
-| `8ce4eb3` | 收录 backport 工具包到 `kit/` |
+| `e54130b` | Merge AstideLabs `android17-aptusitu-new`（第二父 `5bdae44`） |
+| `c35bde4` | docs：记录上游历史接入方式与实测结论 |
+| `68afe06` | docs：README 顶部标注本仓库改动 |
+| `001f632` | kit：收录 backport 工具包到 `kit/` |
+| `add451e` | fix：`f2fs_msg` → `f2fs_err` |
+| `fe343e8` | fix：回滚 `f_midi`（补丁集换 tasklet→work 但结构体未同步） |
+| `77927c2` | generic：AstideLabs 通用更新 741 项 |
+| `85578e1` | generic：AstideLabs 通用更新第一批 25 项 |
+| `fcfb39a` | backport：4.19 侧配套适配（trace/rcu/kernfs/proc/nvdimm/工具链） |
+| `d278556` | kconfig：补齐 BPF/BTF/RCU/trace 配置项并启用 |
+| `0875bca` | backport：security 子系统适配 BPF LSM 挂钩 |
+| `ec0eabf` | backport：BPF 网络侧挂钩（sk_msg/sk_lookup/xdp/sockmap） |
+| `742ef5d` | backport：引入 5.10 BPF 核心（verifier/map/BTF/ringbuf/iter） |
+| `c3df39c` | smith-dog v2.2 release notes（上游 tip） |
 
-`git diff 9093a27..main` 即全部改动，对应 `kit/patches/` 下四个 `git am` 补丁。
+`git diff c3df39c..main` 是我们在 smith-dog 之上做的全部改动。
 
 ## 筛选规则
 
@@ -82,51 +106,59 @@ CONFIG_BPF_LSM=y              CONFIG_BPF_PRELOAD=y        CONFIG_EROFS_FS=y
 
 ## 上游完整历史（merge 提交）
 
-`main` 顶端有一个 merge 提交，把
-[AstideLabs/android_kernel_xiaomi_sm8250](https://github.com/AstideLabs/android_kernel_xiaomi_sm8250)
-的 `android17-aptusitu-new` 完整历史接入本仓库：`c22009..5bdae44` 共 **9,575 个提交**，
-可一路回溯到 Linux 根提交 `1da177e4`（2.6.12-rc2），总计 888,642 个提交对象。
-`git log --graph` 能看到两条父系，作者、日期、提交信息全部保留。
+`e54130b` 是一个真实的三方合并，不是 `--allow-unrelated-histories` 拼出来的：
 
-**为什么用 `-s ours` 而不是逐条 cherry-pick**
+- 第二父 `5bdae44`，来自 `android17-aptusitu-new`
+- merge-base `a67e7cd` = **Linux 4.19.325**
+- 上游侧共 9,575 个提交，作者、日期、信息原样保留
+- 全仓库 880,000+ 提交对象，可回溯到 Linux 根提交
 
-实测把 3,594 条第一父链逐条重放到本树上：
+**合并的实测过程**
 
-| 结果 | 数量 |
+| 阶段 | 结果 |
 |---|---|
-| 干净应用 | 1,263 |
-| 空提交（内容已存在，自动跳过） | 185 |
-| 冲突（两树 BSP 差异，跳过） | 979 |
-| 私有驱动 / 机型专属（预筛排除） | 225 |
-| 已合过的 BPF（预筛排除） | 846 |
+| 自动合并 | 13,884 文件 |
+| 冲突 | 5,028 文件 |
+| ├ vendor 路径（DTS 3,197 / staging 879 / techpack 193 / QCOM 85） | 4,354，取本树 |
+| └ 通用路径 | 674，逐个按 index stage 处理 |
+| 合并后净改动 | 8,858 文件（+1,424,226 / −43,110） |
 
-1,263 条应用后编译失败，原因是上游把以下子系统做成了**成套迁移**，只 pick 一部分
-必然让结构体与头文件失配：
+**为什么最终树内容回到本树**
 
-| 报错 | 根因 |
-|---|---|
-| `linux/kfence.h not found` | kfence 整套引入，header 缺失 |
-| `struct mm_struct 无 mmap_lock` | mmap_lock 包装只落了一半 |
-| `struct vm_fault 无 vma_flags` | 同上，vma 改造不完整 |
-| `struct fuse_req 无 max_pages/inline_pages/misc` | fuse 重写不完整 |
-| `xa_init_flags / XA_FLAGS_LOCK_IRQ 未定义` | radix-tree → xarray 迁移半套 |
-| `arch_atomic_cmpxchg` 与 `atomic_cmpxchg` 并存 | arm64 atomics 改成 arch_ 前缀，但 `include/linux/atomic.h` 仍是 4.19 版 |
-| `struct fib_nh 无 nh_common` | 路由表改造半套 |
-| `memcg_cache_params 无 deact_work` | slab 重构半套 |
-| `get_tree_single / ramfs_fill_super 未定义` | 新 mount API 只改了一半 |
-| `BPF_ATOMIC 未定义` | BPF 指令集扩展与 uapi 版本不匹配 |
+带着这 8,858 个文件的改动编译，按下面顺序逐层回退，错误只是往下一层传导：
 
-两棵树没有共同祖先（本树基线来自 tarball，非克隆历史），差异 15,395 个文件、
-188 万行插入，冲突率 43%。继续逐个回滚只会牵出下一层依赖，最终退化成把上游改动
-全部回滚——等价于没有合并。
+| 顺序 | 报错 | 回退的目录 |
+|---|---|---|
+| 1 | 汇编器检测失败（`scripts/Kconfig.include` 是 5.x 版） | `scripts/` |
+| 2 | `init/Kconfig` 调用 `gcc-version.sh -p`，本树脚本不支持 | 全部 Kconfig（536 个） |
+| 3 | `__lse_ll_sc_body` 未定义（cmpxchg 新、atomic_lse 旧） | `arch/arm64/include/asm` |
+| 4 | `__va_function` 未定义（kCFI） | `arch/arm64/include` |
+| 5 | `pgd_none_or_clear_bad` 重定义 | `include/`、`arch/`、`mm/`、`kernel/` |
+| 6 | `rmnet_config.h` 结构体重定义（techpack 依赖） | `drivers/net/.../rmnet` |
+| 7 | `usb_maxpacket` 签名不匹配 | `drivers/`（3,503 文件） |
+| 8 | `nla_nest_start_noflag` 未定义（netlink API） | `net/`（459 文件） |
+| 9 | `shmem_init_fs_context` 未定义（VFS 新 mount API） | 剩余 `fs/`、`init/` |
 
-因此按 ours 策略保留上游完整历史图、树内容维持已验证状态。**通用更新的实际改动
-落在 `9093a27..f34b2c3` 的 766 项提交里**，可正常编译。
+回退总量：drivers 3,503、arch 2,434、include 308、net 459、fs 361、mm/kernel/security 168。
+每退一层就牵出下一层，最后会退化成「全部取本树」——等价于没有合并。
 
-## 构建脚本修复
+根本原因：两棵 BSP 树的差异是结构性的。小米的驱动与框架改动依赖它自己的 `include/`
+和 `init/` 层，联想的 techpack、私有音频与显示驱动同样如此，任一侧只取一半都会在
+另一侧断裂。这不是「多解几个冲突」能解决的，而是两套树的接口契约不同。
 
-`scripts/kconfig/Makefile`、`mconf.c`、`lxdialog/*`、`scripts/basic/*` 等 8 个源码文件
-曾被本地 `.git/info/exclude` 整目录排除，导致 `olddefconfig` 直接报
-`scripts/kconfig/Makefile: No such file or directory`，**从本仓库 clone 下来也编不过**。
-已在 `f34b2c3` 补回并移除该排除规则。
+**结论**：merge 保留完整历史图，树内容维持已验证状态。上游对通用内核的实际改动，
+落在 `c3df39c..c35bde4` 的 766 项提交里（668 文件，+6,452 / −2,782），可正常编译。
+
+**为什么不用 cherry-pick 逐条重放**
+
+上一轮试过：3,594 条第一父链逐条 pick，干净应用 1,263 条、空提交 185、冲突 979。
+应用的 1,263 条编译时同样因成套迁移失败（kfence / mmap_lock / xarray / fuse / arm64
+atomics / 新 mount API / BPF 指令集），与上面第 3～9 项是同一批问题。
+
+## 构建脚本
+
+`scripts/kconfig/`、`scripts/basic/` 曾在旧的本地仓库里被 `.git/info/exclude` 整目录
+排除，导致 `olddefconfig` 报 `scripts/kconfig/Makefile: No such file or directory`。
+当前历史以 smith-dog 的真实树为基线，101 个构建脚本文件完整存在；两条排除规则已从
+`.git/info/exclude` 删除，clone 下来可直接编译。
 
