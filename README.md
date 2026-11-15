@@ -6,7 +6,7 @@
 > 当前 `main` 共 6 个提交，逐条说明见 [FORK-NOTES.md](FORK-NOTES.md) 与 `git log`。
 > 基线提交 `9093a27` 即上游未改动状态，`git diff 9093a27..main` 为全部改动。
 
-联想小新 Pad Pro 12.7 2021（TB371FC，高通 SM8250/kona）的自定义内核。
+联想小新 Pad Pro 12.7 2023（TB371FC，高通 SM8250/kona）的自定义内核。
 基于联想 GPL 公开源码 + 完整 bring-up 补丁集。**v1.5 起 WiFi/音频/加速等
 全部驱动内建进内核镜像，功能开箱即用：刷入一个镜像即完成全部安装，无需
 任何载荷包或后续步骤。** KernelSU 以 LKM（可加载模块）形态运行，与内核
