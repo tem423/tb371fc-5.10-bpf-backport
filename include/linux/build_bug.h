@@ -85,4 +85,10 @@
 #define _Static_assert(expr, ...)
 #endif
 
+/* 5.10 backport: skmsg.h / net/core/filter.c 使用 static_assert() */
+#ifndef static_assert
+#define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
+#define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
+#endif
+
 #endif	/* _LINUX_BUILD_BUG_H */
